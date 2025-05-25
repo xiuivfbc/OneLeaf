@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
+        android:name=".ToDoListApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -29,9 +30,5 @@
             </intent-filter>
         </activity>
 
-        <!-- 注册 AlarmReceiver -->
-        <receiver
-            android:name="com.example.todolists.AlarmReceiver"
-            android:exported="true" />
     </application>
 </manifest>

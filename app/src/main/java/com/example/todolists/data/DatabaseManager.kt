@@ -12,6 +12,10 @@ class DatabaseManager(private val context: Context) {
         }
     }
 
+    fun getAllDatabases(): List<String> {
+        return database.keys.toList()
+    }
+
     private fun createNewDatabase(name: String): ToDoItemDatabase {
         return Room.databaseBuilder(
             context,

@@ -3,15 +3,22 @@ package com.example.todolists.data
 import android.content.Context
 
 interface AppContainer {
-    val toDoLisitRepository: ToDoListRepository
+    val toDoListRepository: ToDoListRepository
 }
 
 class DefaultAppContainer(
     private val context: Context
 ) : AppContainer {
-    override val toDoLisitRepository: ToDoListRepository by lazy {
+    companion object {
+        const val DEFAULT_DATABASE_NAME = "default_todo"
+    }
+
+    override val toDoListRepository: ToDoListRepository by lazy {
         ToDoListRepository(
-            DatabaseManager(context)
+            DatabaseManager(context).apply {
+                // Pre-initialize default database
+                getDatabase(DEFAULT_DATABASE_NAME)
+            }
         )
     }
 }

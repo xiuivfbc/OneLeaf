@@ -19,8 +19,8 @@ interface ToDoItemDao {
     suspend fun delete(item: ToDoItem)
 
     @Query("SELECT * FROM todo_items WHERE id = :id")
-    suspend fun getItem(id: Long): Flow<ToDoItem?>
+    fun getItem(id: Long): Flow<ToDoItem>
 
     @Query("SELECT * FROM todo_items ORDER BY time DESC")
-    suspend fun getAllItems(): Flow<List<ToDoItem>>
+    fun getAllItems(): Flow<List<ToDoItem>>
 }

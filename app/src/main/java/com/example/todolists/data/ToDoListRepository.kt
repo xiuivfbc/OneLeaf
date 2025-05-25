@@ -3,28 +3,34 @@ package com.example.todolists.data
 import kotlinx.coroutines.flow.Flow
 
 class ToDoListRepository(private val databaseManager: DatabaseManager) {
-    suspend fun insertItem(name: String, item: ToDoItem) {
+    private val defaultDatabaseName = DefaultAppContainer.DEFAULT_DATABASE_NAME
+
+    suspend fun insertItem(item: ToDoItem, name: String = defaultDatabaseName) {
         val db = databaseManager.getDatabase(name)
         db.todoItemDao().insert(item)
     }
 
-    suspend fun getAllItems(name: String): Flow<List<ToDoItem>> {
+    fun getAllItems(name: String = defaultDatabaseName): Flow<List<ToDoItem>> {
         val db = databaseManager.getDatabase(name)
         return db.todoItemDao().getAllItems()
     }
 
-    suspend fun getItemById(name: String, id: Long): Flow<ToDoItem?> {
+    fun getItemById(id: Long, name: String = defaultDatabaseName): Flow<ToDoItem> {
         val db = databaseManager.getDatabase(name)
         return db.todoItemDao().getItem(id)
     }
 
-    suspend fun updateItem(name: String, item: ToDoItem) {
+    suspend fun updateItem(item: ToDoItem, name: String = defaultDatabaseName) {
         val db = databaseManager.getDatabase(name)
         db.todoItemDao().update(item)
     }
 
-    suspend fun deleteItem(name: String, item: ToDoItem) {
+    suspend fun deleteItem(item: ToDoItem, name: String = defaultDatabaseName) {
         val db = databaseManager.getDatabase(name)
         db.todoItemDao().delete(item)
+    }
+
+    fun getAllRepositories(): List<String> {
+        return databaseManager.getAllDatabases()
     }
 }
