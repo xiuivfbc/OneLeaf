@@ -1,7 +1,5 @@
 package com.example.todolists.ui.item
 
-import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolists.data.ToDoItem
@@ -11,34 +9,47 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class ItemEditViewModel(
-    private val toDoListRepository: ToDoListRepository
-): ViewModel() {
-    private lateinit var item_: MutableStateFlow<ToDoItem>
-    var item: StateFlow<ToDoItem> = item_.asStateFlow()
-    var name: String = ""
-    var id: Long = 0
+    private val repository: ToDoListRepository
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(ItemEditState())
+    val uiState: StateFlow<ItemEditState> = _uiState.asStateFlow()
 
-    fun init(name: String, id: Long) {
-        this.name = name
-        this.id = id
+    fun init(repoId: String, itemId: Long) {
+        _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            toDoListRepository.getItemById(id, name).collect { item ->
-                item_.value = item
+            try {
+                val item = repository.getItemById(itemId, repoId).first()
+                _uiState.value = ItemEditState(
+                    repoId = repoId,
+                    item = item,
+                    isNew = item.id == 0L,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
     }
 
-    fun updateItem(name: String, item: ToDoItem) {
+    fun saveItem(item: ToDoItem) {
         viewModelScope.launch {
-            toDoListRepository.updateItem(item, name)
+            repository.updateItem(item, _uiState.value.repoId)
         }
     }
 
-    fun deleteItem(name: String, item: ToDoItem) {
+    fun deleteItem() {
         viewModelScope.launch {
-            toDoListRepository.deleteItem(item, name)
+            repository.deleteItem(_uiState.value.item, _uiState.value.repoId)
         }
     }
 }
+
+data class ItemEditState(
+    val repoId: String = "",
+    val item: ToDoItem = ToDoItem(title = "", describe = ""),
+    val isNew: Boolean = true,
+    val isLoading: Boolean = false
+)

@@ -1,12 +1,15 @@
 package com.example.todolists.ui.home
 
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.todolists.data.ToDoListRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -20,6 +23,17 @@ class HomeViewModel(
     }
 
     private fun loadRepositories() {
-        _repositories.value = toDoListRepository.getAllRepositories()
+        viewModelScope.launch {
+            toDoListRepository.getAllRepositories().collect{name->
+                _repositories.value = name
+            }
+        }
+    }
+
+    fun createNewRepository(name:String) {
+        viewModelScope.launch {
+            toDoListRepository.createNewDatabase(name)
+            loadRepositories()
+        }
     }
 }

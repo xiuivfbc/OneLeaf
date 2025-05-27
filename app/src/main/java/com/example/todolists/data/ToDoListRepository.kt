@@ -10,6 +10,10 @@ class ToDoListRepository(private val databaseManager: DatabaseManager) {
         db.todoItemDao().insert(item)
     }
 
+    fun createNewDatabase(name: String) {
+        databaseManager.getDatabase(name)
+    }
+
     fun getAllItems(name: String = defaultDatabaseName): Flow<List<ToDoItem>> {
         val db = databaseManager.getDatabase(name)
         return db.todoItemDao().getAllItems()
@@ -30,7 +34,7 @@ class ToDoListRepository(private val databaseManager: DatabaseManager) {
         db.todoItemDao().delete(item)
     }
 
-    fun getAllRepositories(): List<String> {
+    fun getAllRepositories(): Flow<List<String>> {
         return databaseManager.getAllDatabases()
     }
 }

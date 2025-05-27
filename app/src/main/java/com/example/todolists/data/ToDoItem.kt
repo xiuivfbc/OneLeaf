@@ -8,6 +8,6 @@ data class ToDoItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
     var title: String,
-    var describe: String, // 建议字段名为 describe
-    var time: Long // 以时间戳存储
+    var describe: String = "", // 建议字段名为 describe
+    var time: Long = 0// 以时间戳存储
 )

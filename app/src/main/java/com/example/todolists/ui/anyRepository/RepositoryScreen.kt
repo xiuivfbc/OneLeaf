@@ -1,7 +1,9 @@
 package com.example.todolists.ui.anyRepository
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,7 +18,18 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextField
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.ui.AppViewModelProvider
@@ -32,28 +45,79 @@ fun RepositoryScreen(
     viewModel.loadItems(repoId)
     val items by viewModel.items.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Repository: $repoId") },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
-        )
+    var showDialog by remember { mutableStateOf(false) }
+    var itemTitle by remember { mutableStateOf("") }
 
-        LazyColumn {
-            items(items) { item ->
-                Card(
-                    onClick = { onNavigateToItem(item.id) },
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text(
-                        text = "Item: ${item.title}",
-                        modifier = Modifier.padding(16.dp)
-                    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopAppBar(
+                title = { Text("Repository: $repoId") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+
+            LazyColumn {
+                items(items) { item ->
+                    Card(
+                        onClick = { onNavigateToItem(item.id) },
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Item: ${item.title}",
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("添加新Item") },
+                text = {
+                    TextField(
+                        value = itemTitle,
+                        onValueChange = { itemTitle = it },
+                        label = { Text("Item标题") }
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.addItem(repoId, itemTitle)
+                            itemTitle = ""
+                            showDialog = false
+                        }
+                    ) {
+                        Text("添加")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { showDialog = false }
+                    ) {
+                        Text("取消")
+                    }
+                }
+            )
+        }
+
+        FloatingActionButton(
+            onClick = { showDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "添加Item")
         }
     }
 }

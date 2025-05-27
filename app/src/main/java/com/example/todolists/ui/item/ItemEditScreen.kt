@@ -1,24 +1,21 @@
 package com.example.todolists.ui.item
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.ui.AppViewModelProvider
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,49 +24,121 @@ fun ItemEditScreen(
     itemId: Long,
     onBack: () -> Unit
 ) {
-    val viewModel : ItemEditViewModel = viewModel(factory = AppViewModelProvider.Factory)
-    viewModel.init(repoId, itemId)
-    val nowItem = viewModel.item.collectAsState().value
+    val viewModel: ItemEditViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    val uiState = viewModel.uiState.collectAsState().value
+    
+    LaunchedEffect(repoId, itemId) {
+        viewModel.init(repoId, itemId)
+    }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Editing: $itemId") },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val (currentItem, setCurrentItem) = remember { 
+        mutableStateOf(uiState.item.copy()) 
+    }
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
+        initialMinute = Calendar.getInstance().get(Calendar.MINUTE)
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(if (uiState.isNew) "新建待办" else "编辑待办") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
+            item {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    OutlinedTextField(
+                        value = currentItem.title,
+                        onValueChange = { setCurrentItem(currentItem.copy(title = it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("标题") },
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = currentItem.describe,
+                        onValueChange = { 
+                            if (it.length <= 200) {
+                                setCurrentItem(currentItem.copy(describe = it))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("描述") },
+                        supportingText = { Text("${currentItem.describe.length}/200") },
+                        singleLine = false,
+                        maxLines = 5
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TimePicker(
+                        state = timePickerState,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = {
+                            val calendar = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(Calendar.MINUTE, timePickerState.minute)
+                                set(Calendar.SECOND, 0)
+                            }
+                            val updatedItem = currentItem.copy(
+                                time = calendar.timeInMillis
+                            )
+                            viewModel.saveItem(updatedItem)
+                            onBack()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("保存")
+                    }
+
+                    if (!uiState.isNew) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                viewModel.deleteItem()
+                                onBack()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Text("删除")
+                        }
+                    }
                 }
             }
-        )
-
-        OutlinedTextField(
-            value = nowItem.title,
-            onValueChange = { nowItem.title = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
-
-        OutlinedTextField(
-            value = nowItem.describe,
-            onValueChange = { nowItem.describe = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
-
-        Button(
-            onClick = { viewModel.updateItem(repoId, nowItem) },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Save")
-        }
-
-        Button(
-            onClick = { viewModel.deleteItem(repoId, nowItem)
-                      onBack()},
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Delete")
         }
     }
 }

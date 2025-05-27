@@ -2,6 +2,7 @@ package com.example.todolists.data
 
 import androidx.room.Room
 import android.content.Context
+import kotlinx.coroutines.flow.Flow
 
 class DatabaseManager(private val context: Context) {
     private val database = mutableMapOf<String, ToDoItemDatabase>()
@@ -12,8 +13,10 @@ class DatabaseManager(private val context: Context) {
         }
     }
 
-    fun getAllDatabases(): List<String> {
-        return database.keys.toList()
+    fun getAllDatabases(): Flow<List<String>> {
+        return kotlinx.coroutines.flow.flow {
+            emit(database.keys.toList())
+        }
     }
 
     private fun createNewDatabase(name: String): ToDoItemDatabase {
