@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.time.LocalDateTime
 
 class ItemEditViewModel(
     private val repository: ToDoListRepository
@@ -45,11 +45,24 @@ class ItemEditViewModel(
             repository.deleteItem(_uiState.value.item, _uiState.value.repoId)
         }
     }
+
+    fun showDatePicker(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showDatePicker = show)
+    }
+
+    fun setSelectedDateTime(dateTime: LocalDateTime) {
+        _uiState.value = _uiState.value.copy(
+            selectedDateTime = dateTime,
+            item = _uiState.value.item.copy(dateTime = dateTime)
+        )
+    }
 }
 
 data class ItemEditState(
     val repoId: String = "",
     val item: ToDoItem = ToDoItem(title = "", describe = ""),
     val isNew: Boolean = true,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val showDatePicker: Boolean = false,
+    val selectedDateTime: LocalDateTime? = null
 )

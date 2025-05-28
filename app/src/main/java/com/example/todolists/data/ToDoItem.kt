@@ -8,6 +8,7 @@ data class ToDoItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
     var title: String,
-    var describe: String = "", // 建议字段名为 describe
-    var time: Long = 0// 以时间戳存储
+    var describe: String = "",
+    var time: Long = 0, // 保留时间戳字段用于兼容
+    var dateTime: java.time.LocalDateTime? = null // 新增日期时间字段
 )

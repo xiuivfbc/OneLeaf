@@ -24,7 +24,9 @@ class DatabaseManager(private val context: Context) {
             context,
             ToDoItemDatabase::class.java,
             "$name.db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     fun closeAll() {

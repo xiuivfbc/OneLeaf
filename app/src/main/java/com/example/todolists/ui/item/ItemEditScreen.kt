@@ -1,10 +1,13 @@
 package com.example.todolists.ui.item
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,8 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.ui.AppViewModelProvider
-import java.util.Calendar
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemEditScreen(
@@ -44,18 +51,7 @@ fun ItemEditScreen(
     val (currentItem, setCurrentItem) = remember { 
         mutableStateOf(uiState.item.copy()) 
     }
-    val timePickerState = rememberTimePickerState(
-        initialHour = if (uiState.item.time > 0) {
-            ((uiState.item.time / 3600) % 24).toInt()
-        } else {
-            Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        },
-        initialMinute = if (uiState.item.time > 0) {
-            ((uiState.item.time / 60) % 60).toInt()
-        } else {
-            Calendar.getInstance().get(Calendar.MINUTE)
-        }
-    )
+    val showDatePickerDialog = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -104,20 +100,74 @@ fun ItemEditScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    TimePicker(
-                        state = timePickerState,
+                    Button(
+                        onClick = { showDatePickerDialog.value = true },
                         modifier = Modifier.fillMaxWidth()
-                    )
+                    ) {
+                        Text(currentItem.dateTime?.toString() ?: "选择日期时间")
+                    }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    if (showDatePickerDialog.value) {
+                        AlertDialog(
+                            onDismissRequest = { showDatePickerDialog.value = false },
+                            title = { Text("选择日期时间") },
+                            text = {
+                                // 简单实现日期时间选择
+                                Column {
+                                    val dateState = rememberDatePickerState()
+                                    val timeState = rememberTimePickerState(
+                                        initialHour = currentItem.dateTime?.hour ?: 0,
+                                        initialMinute = currentItem.dateTime?.minute ?: 0
+                                    )
+                                    
+                                    DatePicker(
+                                        state = dateState,
+                                        title = { Text("选择日期") }
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    
+                                    TimePicker(
+                                        state = timeState
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    
+                                    Button(onClick = {
+                                        dateState.selectedDateMillis?.let { dateMillis ->
+                                            val date = Instant.ofEpochMilli(dateMillis)
+                                                .atZone(ZoneId.systemDefault())
+                                                .toLocalDate()
+                                            viewModel.setSelectedDateTime(
+                                                LocalDateTime.of(
+                                                    date.year,
+                                                    date.month,
+                                                    date.dayOfMonth,
+                                                    timeState.hour,
+                                                    timeState.minute
+                                                )
+                                            )
+                                            showDatePickerDialog.value = false
+                                        }
+                                    }) {
+                                        Text("确认")
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                Button(onClick = { showDatePickerDialog.value = false }) {
+                                    Text("确定")
+                                }
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
-                            val timeInSeconds = 
-                                timePickerState.hour * 3600L + 
-                                timePickerState.minute * 60L
                             val updatedItem = currentItem.copy(
-                                time = timeInSeconds
+                                time = currentItem.dateTime?.toEpochSecond(ZoneOffset.UTC) ?: 0L
                             )
                             viewModel.saveItem(updatedItem)
                             onBack()
