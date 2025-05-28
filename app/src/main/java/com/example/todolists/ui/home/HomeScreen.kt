@@ -25,8 +25,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.example.todolists.ui.AppViewModelProvider
+import com.example.todolists.R
 
 @Composable
 fun HomeScreen(
@@ -46,8 +48,8 @@ fun HomeScreen(
                         .padding(8.dp)
                         .fillMaxWidth()
                 ) {
-                    Text(
-                        text = "Repository: $repoId",
+                        Text(
+                        text = stringResource(R.string.repository_title, repoId),
                         modifier = Modifier
                             .padding(16.dp)
                             .fillMaxWidth(),
@@ -60,12 +62,12 @@ fun HomeScreen(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("创建新Repository") },
+                title = { Text(stringResource(R.string.create_repository_dialog_title)) },
                 text = {
                     TextField(
                         value = repositoryName,
                         onValueChange = { repositoryName = it },
-                        label = { Text("Repository名称") }
+                        label = { Text(stringResource(R.string.repository_name_hint)) }
                     )
                 },
                 confirmButton = {
@@ -76,21 +78,21 @@ fun HomeScreen(
                             showDialog = false
                         }
                     ) {
-                        Text("创建")
+                        Text(stringResource(R.string.create_button))
                     }
                 },
                 dismissButton = {
                     Button(
                         onClick = { showDialog = false }
                     ) {
-                        Text("取消")
+                        Text(stringResource(R.string.cancel_button))
                     }
                 }
             )
         }
     }
 
-    FloatBotton("添加Repository") {
+    FloatBotton(stringResource(R.string.add_repository_fab)) {
         showDialog = true
     }
 }

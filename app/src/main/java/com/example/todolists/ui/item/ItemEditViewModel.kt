@@ -1,5 +1,7 @@
 package com.example.todolists.ui.item
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolists.data.ToDoItem
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class ItemEditViewModel(
     private val repository: ToDoListRepository
@@ -50,10 +53,14 @@ class ItemEditViewModel(
         _uiState.value = _uiState.value.copy(showDatePicker = show)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun setSelectedDateTime(dateTime: LocalDateTime) {
         _uiState.value = _uiState.value.copy(
             selectedDateTime = dateTime,
-            item = _uiState.value.item.copy(dateTime = dateTime)
+            item = _uiState.value.item.copy(
+                dateTime = dateTime,
+                time = dateTime.toEpochSecond(ZoneOffset.UTC)
+            )
         )
     }
 }

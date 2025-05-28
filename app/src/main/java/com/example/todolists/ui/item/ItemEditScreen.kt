@@ -15,13 +15,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.ui.AppViewModelProvider
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.foundation.layout.Spacer
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
+import com.example.todolists.R
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,10 +63,10 @@ fun ItemEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (uiState.isNew) "新建待办" else "编辑待办") },
+                title = { Text(if (uiState.isNew) stringResource(R.string.new_todo_title) else stringResource(R.string.edit_todo_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_button_desc))
                     }
                 }
             )
@@ -78,7 +85,7 @@ fun ItemEditScreen(
                         value = currentItem.title,
                         onValueChange = { setCurrentItem(currentItem.copy(title = it)) },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("标题") },
+                        label = { Text(stringResource(R.string.todo_title_hint)) },
                         singleLine = true
                     )
 
@@ -92,7 +99,7 @@ fun ItemEditScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("描述") },
+                        label = { Text(stringResource(R.string.todo_description_hint)) },
                         supportingText = { Text("${currentItem.describe.length}/200") },
                         singleLine = false,
                         maxLines = 5
@@ -104,13 +111,13 @@ fun ItemEditScreen(
                         onClick = { showDatePickerDialog.value = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(currentItem.dateTime?.toString() ?: "选择日期时间")
+                        Text(currentItem.dateTime?.toString() ?: stringResource(R.string.select_datetime_button))
                     }
 
                     if (showDatePickerDialog.value) {
                         AlertDialog(
                             onDismissRequest = { showDatePickerDialog.value = false },
-                            title = { Text("选择日期时间") },
+                            title = { Text(stringResource(R.string.select_datetime_button)) },
                             text = {
                                 // 简单实现日期时间选择
                                 Column {
@@ -122,10 +129,10 @@ fun ItemEditScreen(
                                     
                                     DatePicker(
                                         state = dateState,
-                                        title = { Text("选择日期") }
+                                        title = { Text(stringResource(R.string.select_date_title)) }
                                     )
                                     
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     
                                     TimePicker(
                                         state = timeState
@@ -150,13 +157,13 @@ fun ItemEditScreen(
                                             showDatePickerDialog.value = false
                                         }
                                     }) {
-                                        Text("确认")
+                                        Text(stringResource(R.string.confirm_button))
                                     }
                                 }
                             },
                             confirmButton = {
                                 Button(onClick = { showDatePickerDialog.value = false }) {
-                                    Text("确定")
+                                    Text(stringResource(R.string.ok_button))
                                 }
                             }
                         )
@@ -172,9 +179,12 @@ fun ItemEditScreen(
                             viewModel.saveItem(updatedItem)
                             onBack()
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("保存")
+                        Text(stringResource(R.string.save_button))
                     }
 
                     if (!uiState.isNew) {
@@ -189,7 +199,7 @@ fun ItemEditScreen(
                                 containerColor = MaterialTheme.colorScheme.errorContainer
                             )
                         ) {
-                            Text("删除")
+                        Text(stringResource(R.string.delete_button))
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 package com.example.todolists.ui.anyRepository
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,11 +31,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.ui.AppViewModelProvider
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import com.example.todolists.R
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepositoryScreen(
@@ -53,10 +68,10 @@ fun RepositoryScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
-                title = { Text("Repository: $repoId") },
+                title = { Text(stringResource(R.string.repository_title, repoId)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_button_desc))
                     }
                 }
             )
@@ -70,7 +85,7 @@ fun RepositoryScreen(
                             .fillMaxWidth()
                     ) {
                         Text(
-                            text = "Item: ${item.title}",
+                            text = stringResource(R.string.item_title_format, item.title),
                             modifier = Modifier
                                 .padding(16.dp)
                                 .fillMaxWidth(),
@@ -84,42 +99,72 @@ fun RepositoryScreen(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("添加新Item") },
+                title = { Text(stringResource(R.string.add_item_dialog_title)) },
                 text = {
                     Column {
                         TextField(
                             value = itemTitle,
                             onValueChange = { itemTitle = it },
-                            label = { Text("Item标题") },
+                            label = { Text(stringResource(R.string.item_title_hint)) },
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         TextField(
                             value = itemDescribe,
                             onValueChange = { itemDescribe = it },
-                            label = { Text("Item描述") },
+                            label = { Text(stringResource(R.string.item_description_hint)) },
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        TextField(
-                            value = if (itemTime == 0L) "" else {
-                                val seconds = itemTime % 60
-                                val minutes = (itemTime / 60) % 60
-                                val hours = (itemTime / 3600)
-                                "$hours:$minutes:$seconds"
-                            },
-                            onValueChange = { 
-                                val parts = it.split(":")
-                                if (parts.size == 3) {
-                                    val hours = parts[0].toLongOrNull() ?: 0L
-                                    val minutes = parts[1].toLongOrNull() ?: 0L
-                                    val seconds = parts[2].toLongOrNull() ?: 0L
-                                    itemTime = hours * 3600 + minutes * 60 + seconds
-                                } else {
-                                    itemTime = 0L
-                                }
-                            },
-                            label = { Text("时间 (时:分:秒)") },
-                            placeholder = { Text("例如: 12:30:45") }
-                        )
+                            var showDateTimePicker by remember { mutableStateOf(false) }
+                            
+                            Button(
+                                onClick = { showDateTimePicker = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(if (itemTime == 0L) stringResource(R.string.select_datetime_button) else stringResource(R.string.selected_datetime_format, LocalDateTime.ofEpochSecond(itemTime, 0, ZoneOffset.UTC)))
+                            }
+                            
+                            if (showDateTimePicker) {
+                                val dateState = rememberDatePickerState()
+                                val timeState = rememberTimePickerState()
+                                
+                                AlertDialog(
+                                    onDismissRequest = { showDateTimePicker = false },
+                                    title = { Text(stringResource(R.string.select_datetime_button)) },
+                                    text = {
+                                        Column {
+                                            DatePicker(state = dateState)
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            TimePicker(state = timeState)
+                                        }
+                                    },
+                                    confirmButton = {
+                                        Button(onClick = {
+                                            dateState.selectedDateMillis?.let { dateMillis ->
+                                                val instant = Instant.ofEpochMilli(dateMillis)
+                                                val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+                                                val localDate = zonedDateTime.toLocalDate()
+                                                
+                                                itemTime = LocalDateTime.of(
+                                                    localDate.year,
+                                                    localDate.month,
+                                                    localDate.dayOfMonth,
+                                                    timeState.hour,
+                                                    timeState.minute
+                                                ).toEpochSecond(ZoneOffset.UTC)
+                                                
+                                                showDateTimePicker = false
+                                            }
+                                        }) {
+                                            Text(stringResource(R.string.confirm_button))
+                                        }
+                                    },
+                                    dismissButton = {
+                                        Button(onClick = { showDateTimePicker = false }) {
+                                            Text(stringResource(R.string.cancel_button))
+                                        }
+                                    }
+                                )
+                            }
                     }
                 },
                 confirmButton = {
@@ -132,14 +177,14 @@ fun RepositoryScreen(
                             showDialog = false
                         }
                     ) {
-                        Text("添加")
+                        Text(stringResource(R.string.add_button))
                     }
                 },
                 dismissButton = {
                     Button(
                         onClick = { showDialog = false }
                     ) {
-                        Text("取消")
+                        Text(stringResource(R.string.cancel_button))
                     }
                 }
             )
@@ -151,7 +196,7 @@ fun RepositoryScreen(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "添加Item")
+            Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.add_item_fab_desc))
         }
     }
 }

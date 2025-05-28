@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">ToDoLists</string>
+    <string name="repository_title">Repository: %s</string>
+    <string name="create_repository_dialog_title">创建新Repository</string>
+    <string name="repository_name_hint">Repository名称</string>
+    <string name="create_button">创建</string>
+    <string name="cancel_button">取消</string>
+    <string name="add_repository_fab">添加Repository</string>
+    <string name="back_button_desc">返回</string>
+    <string name="item_title_format">Item: %s</string>
+    <string name="add_item_dialog_title">添加新Item</string>
+    <string name="item_title_hint">Item标题</string>
+    <string name="item_description_hint">Item描述</string>
+    <string name="select_datetime_button">选择日期时间</string>
+    <string name="selected_datetime_format">已选择: %s</string>
+    <string name="confirm_button">确认</string>
+    <string name="add_button">添加</string>
+    <string name="add_item_fab_desc">添加Item</string>
+    <string name="new_todo_title">新建待办</string>
+    <string name="edit_todo_title">编辑待办</string>
+    <string name="todo_title_hint">标题</string>
+    <string name="todo_description_hint">描述</string>
+    <string name="select_date_title">选择日期</string>
+    <string name="ok_button">确定</string>
+    <string name="save_button">保存</string>
+    <string name="delete_button">删除</string>
 </resources>

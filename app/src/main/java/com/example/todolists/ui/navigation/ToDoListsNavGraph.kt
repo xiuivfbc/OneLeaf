@@ -1,5 +1,7 @@
 package com.example.todolists.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -14,6 +16,7 @@ import com.example.todolists.ui.item.ItemEditScreen
 import com.example.todolists.ui.navigation.Screen.Item
 import com.example.todolists.ui.navigation.Screen.Repository
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ToDoListsNavGraph(
     navController: NavHostController,

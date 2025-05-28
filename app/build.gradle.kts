@@ -74,4 +74,7 @@ dependencies {
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // GoogleFonts
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.8.1")
 }
