@@ -44,10 +44,17 @@ fun ItemEditScreen(
     val (currentItem, setCurrentItem) = remember { 
         mutableStateOf(uiState.item.copy()) 
     }
-
     val timePickerState = rememberTimePickerState(
-        initialHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-        initialMinute = Calendar.getInstance().get(Calendar.MINUTE)
+        initialHour = if (uiState.item.time > 0) {
+            ((uiState.item.time / 3600) % 24).toInt()
+        } else {
+            Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        },
+        initialMinute = if (uiState.item.time > 0) {
+            ((uiState.item.time / 60) % 60).toInt()
+        } else {
+            Calendar.getInstance().get(Calendar.MINUTE)
+        }
     )
 
     Scaffold(
@@ -106,13 +113,11 @@ fun ItemEditScreen(
 
                     Button(
                         onClick = {
-                            val calendar = Calendar.getInstance().apply {
-                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                                set(Calendar.MINUTE, timePickerState.minute)
-                                set(Calendar.SECOND, 0)
-                            }
+                            val timeInSeconds = 
+                                timePickerState.hour * 3600L + 
+                                timePickerState.minute * 60L
                             val updatedItem = currentItem.copy(
-                                time = calendar.timeInMillis
+                                time = timeInSeconds
                             )
                             viewModel.saveItem(updatedItem)
                             onBack()

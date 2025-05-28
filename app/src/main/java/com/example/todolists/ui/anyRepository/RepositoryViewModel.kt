@@ -24,9 +24,9 @@ class RepositoryViewModel(
         }
     }
 
-    fun addItem(dbName: String, title: String) {
+    fun addItem(dbName: String, title: String, describe: String = "", time: Long = 0) {
         viewModelScope.launch {
-            val newItem = ToDoItem(title = title)
+            val newItem = ToDoItem(title = title, describe = describe, time = time)
             toDoListRepository.insertItem(newItem, dbName)
             loadItems(dbName)
         }

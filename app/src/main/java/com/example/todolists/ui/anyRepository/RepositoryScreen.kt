@@ -47,6 +47,8 @@ fun RepositoryScreen(
 
     var showDialog by remember { mutableStateOf(false) }
     var itemTitle by remember { mutableStateOf("") }
+    var itemDescribe by remember { mutableStateOf("") }
+    var itemTime by remember { mutableStateOf(0L) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -84,17 +86,49 @@ fun RepositoryScreen(
                 onDismissRequest = { showDialog = false },
                 title = { Text("添加新Item") },
                 text = {
-                    TextField(
-                        value = itemTitle,
-                        onValueChange = { itemTitle = it },
-                        label = { Text("Item标题") }
-                    )
+                    Column {
+                        TextField(
+                            value = itemTitle,
+                            onValueChange = { itemTitle = it },
+                            label = { Text("Item标题") },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        TextField(
+                            value = itemDescribe,
+                            onValueChange = { itemDescribe = it },
+                            label = { Text("Item描述") },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        TextField(
+                            value = if (itemTime == 0L) "" else {
+                                val seconds = itemTime % 60
+                                val minutes = (itemTime / 60) % 60
+                                val hours = (itemTime / 3600)
+                                "$hours:$minutes:$seconds"
+                            },
+                            onValueChange = { 
+                                val parts = it.split(":")
+                                if (parts.size == 3) {
+                                    val hours = parts[0].toLongOrNull() ?: 0L
+                                    val minutes = parts[1].toLongOrNull() ?: 0L
+                                    val seconds = parts[2].toLongOrNull() ?: 0L
+                                    itemTime = hours * 3600 + minutes * 60 + seconds
+                                } else {
+                                    itemTime = 0L
+                                }
+                            },
+                            label = { Text("时间 (时:分:秒)") },
+                            placeholder = { Text("例如: 12:30:45") }
+                        )
+                    }
                 },
                 confirmButton = {
                     Button(
                         onClick = {
-                            viewModel.addItem(repoId, itemTitle)
+                            viewModel.addItem(repoId, itemTitle, itemDescribe, itemTime)
                             itemTitle = ""
+                            itemDescribe = ""
+                            itemTime = 0L
                             showDialog = false
                         }
                     ) {
