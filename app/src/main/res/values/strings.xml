@@ -23,5 +23,6 @@
     <string name="select_date_title">选择日期</string>
     <string name="ok_button">确定</string>
     <string name="save_button">保存</string>
+    <string name="next_button">下一个</string>
     <string name="delete_button">删除</string>
 </resources>
