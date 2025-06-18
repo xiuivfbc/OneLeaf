@@ -1,6 +1,8 @@
 package com.example.todolists.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flowOn
 
 class ToDoListRepository(private val databaseManager: DatabaseManager) {
     private val defaultDatabaseName = DefaultAppContainer.DEFAULT_DATABASE_NAME
@@ -10,18 +12,22 @@ class ToDoListRepository(private val databaseManager: DatabaseManager) {
         db.todoItemDao().insert(item)
     }
 
-    fun createNewDatabase(name: String) {
+    suspend fun createNewDatabase(name: String) {
         databaseManager.getDatabase(name)
     }
 
     fun getAllItems(name: String = defaultDatabaseName): Flow<List<ToDoItem>> {
-        val db = databaseManager.getDatabase(name)
-        return db.todoItemDao().getAllItems()
+        return kotlinx.coroutines.flow.flow {
+            val db = databaseManager.getDatabase(name)
+            emitAll(db.todoItemDao().getAllItems())
+        }.flowOn(kotlinx.coroutines.Dispatchers.IO)
     }
 
     fun getItemById(id: Long, name: String = defaultDatabaseName): Flow<ToDoItem> {
-        val db = databaseManager.getDatabase(name)
-        return db.todoItemDao().getItem(id)
+        return kotlinx.coroutines.flow.flow {
+            val db = databaseManager.getDatabase(name)
+            emitAll(db.todoItemDao().getItem(id))
+        }.flowOn(kotlinx.coroutines.Dispatchers.IO)
     }
 
     suspend fun updateItem(item: ToDoItem, name: String = defaultDatabaseName) {

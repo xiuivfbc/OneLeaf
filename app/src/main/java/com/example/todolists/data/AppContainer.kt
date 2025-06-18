@@ -14,11 +14,8 @@ class DefaultAppContainer(
     }
 
     override val toDoListRepository: ToDoListRepository by lazy {
-        ToDoListRepository(
-            DatabaseManager(context).apply {
-                // Pre-initialize default database
-                getDatabase(DEFAULT_DATABASE_NAME)
-            }
-        )
+        val databaseManager = DatabaseManager(context)
+        // Database will be initialized when first used
+        ToDoListRepository(databaseManager)
     }
 }
