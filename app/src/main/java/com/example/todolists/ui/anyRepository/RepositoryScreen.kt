@@ -29,6 +29,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -42,11 +43,13 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.rememberCoroutineScope
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import com.example.todolists.R
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +67,8 @@ fun RepositoryScreen(
     var itemTitle by remember { mutableStateOf("") }
     var itemDescribe by remember { mutableStateOf("") }
     var itemTime by remember { mutableStateOf(0L) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -72,6 +77,11 @@ fun RepositoryScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_button_desc))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_repository_desc))
                     }
                 }
             )
@@ -197,6 +207,34 @@ fun RepositoryScreen(
                 .padding(16.dp)
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.add_item_fab_desc))
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text(stringResource(R.string.delete_repository_title)) },
+                text = { Text(stringResource(R.string.delete_repository_message, repoId)) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                viewModel.deleteRepository(repoId)
+                                showDeleteDialog = false
+                                onBack()
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.delete_button))
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { showDeleteDialog = false }
+                    ) {
+                        Text(stringResource(R.string.cancel_button))
+                    }
+                }
+            )
         }
     }
 }

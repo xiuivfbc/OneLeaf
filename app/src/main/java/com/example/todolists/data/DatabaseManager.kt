@@ -37,4 +37,14 @@ class DatabaseManager(private val context: Context) {
         database.values.forEach { it.close() }
         database.clear()
     }
+
+    suspend fun deleteDatabase(name: String) {
+        val currentNames = preferencesDataStore.databaseNames.first().toMutableSet()
+        currentNames.remove(name)
+        preferencesDataStore.saveDatabaseNames(currentNames)
+
+        database[name]?.close()
+        database.remove(name)
+        context.deleteDatabase("$name.db")
+    }
 }

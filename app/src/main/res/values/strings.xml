@@ -25,4 +25,7 @@
     <string name="save_button">保存</string>
     <string name="next_button">下一个</string>
     <string name="delete_button">删除</string>
+    <string name="delete_repository_title">删除Repository</string>
+    <string name="delete_repository_message">确定要删除Repository: %s吗？</string>
+    <string name="delete_repository_desc">删除Repository</string>
 </resources>

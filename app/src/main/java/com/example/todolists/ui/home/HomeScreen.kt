@@ -24,18 +24,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.todolists.ui.AppViewModelProvider
 import com.example.todolists.R
 
 @Composable
 fun HomeScreen(
-    onNavigateToRepository: (repoId: String) -> Unit,
+    onNavigateToRepository: (repoId: String) -> Unit
 ) {
     val viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val repositories by viewModel.repositories.collectAsState(initial = emptyList())
+
     var showDialog by remember { mutableStateOf(false) }
     var repositoryName by remember { mutableStateOf("") }
 

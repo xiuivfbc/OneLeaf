@@ -43,4 +43,8 @@ class ToDoListRepository(private val databaseManager: DatabaseManager) {
     fun getAllRepositories(): Flow<List<String>> {
         return databaseManager.getAllDatabases()
     }
+
+    suspend fun deleteRepository(name: String) {
+        databaseManager.deleteDatabase(name)
+    }
 }

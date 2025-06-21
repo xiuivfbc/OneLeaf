@@ -31,4 +31,10 @@ class RepositoryViewModel(
             loadItems(dbName)
         }
     }
+
+    fun deleteRepository(dbName: String) {
+        viewModelScope.launch {
+            toDoListRepository.deleteRepository(dbName)
+        }
+    }
 }
