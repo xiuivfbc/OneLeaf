@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class RepositoryViewModel(
     private val toDoListRepository: ToDoListRepository
@@ -24,9 +25,14 @@ class RepositoryViewModel(
         }
     }
 
-    fun addItem(dbName: String, title: String, describe: String = "", time: Long = 0) {
+    fun addItem(dbName: String, title: String, describe: String = "", time: Long = 0, dateTime: LocalDateTime? = null) {
         viewModelScope.launch {
-            val newItem = ToDoItem(title = title, describe = describe, time = time)
+            val newItem = ToDoItem(
+                title = title, 
+                describe = describe, 
+                time = time,
+                dateTime = dateTime
+            )
             toDoListRepository.insertItem(newItem, dbName)
             loadItems(dbName)
         }
