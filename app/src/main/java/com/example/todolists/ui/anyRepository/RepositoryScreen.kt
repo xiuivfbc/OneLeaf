@@ -48,6 +48,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.R
 import com.example.todolists.ui.AppViewModelProvider
@@ -78,18 +80,27 @@ fun RepositoryScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    val context = LocalContext.current
+
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 title = { Text(stringResource(R.string.repository_title, repoId)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back_button_desc))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back_button_desc)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_repository_desc))
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete_repository_desc)
+                        )
                     }
                 }
             )
@@ -132,7 +143,7 @@ fun RepositoryScreen(
                             label = { Text(stringResource(R.string.item_description_hint)) },
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        
+
                         var showDatePicker by remember { mutableStateOf(false) }
                         var showTimePicker by remember { mutableStateOf(false) }
                         val dateState = rememberDatePickerState()
@@ -143,7 +154,10 @@ fun RepositoryScreen(
                             onClick = { showDatePicker = true },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(itemDateTime?.toString() ?: stringResource(R.string.select_datetime_button))
+                            Text(
+                                itemDateTime?.toString()
+                                    ?: stringResource(R.string.select_datetime_button)
+                            )
                         }
 
                         if (showDatePicker) {
@@ -153,11 +167,22 @@ fun RepositoryScreen(
                                     TextButton(
                                         onClick = {
                                             dateState.selectedDateMillis?.let { millis ->
-                                                selectedDate = Instant.ofEpochMilli(millis)
+                                                val selectedDate_ = Instant.ofEpochMilli(millis)
                                                     .atZone(ZoneId.systemDefault())
                                                     .toLocalDate()
-                                                showDatePicker = false
-                                                showTimePicker = true
+                                                val today = LocalDate.now()
+
+                                                if (selectedDate_.isBefore(today)) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.date_error_message),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    selectedDate = selectedDate_
+                                                    showDatePicker = false
+                                                    showTimePicker = true
+                                                }
                                             }
                                         },
                                         enabled = dateState.selectedDateMillis != null
@@ -171,7 +196,10 @@ fun RepositoryScreen(
                                     }
                                 }
                             ) {
-                                DatePicker(state = dateState)
+                                DatePicker(
+                                    state = dateState,
+
+                                    )
                             }
                         }
 
@@ -193,7 +221,7 @@ fun RepositoryScreen(
                                             state = timeState,
                                             modifier = Modifier.padding(8.dp)
                                         )
-                                        
+
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -206,16 +234,30 @@ fun RepositoryScreen(
                                             Spacer(modifier = Modifier.width(16.dp))
                                             TextButton(
                                                 onClick = {
-                                                    itemDateTime = LocalDateTime.of(
+                                                    val newDateTime = LocalDateTime.of(
                                                         selectedDate!!.year,
                                                         selectedDate!!.month,
                                                         selectedDate!!.dayOfMonth,
                                                         timeState.hour,
                                                         timeState.minute
                                                     )
-                                                    itemTime = itemDateTime!!.toEpochSecond(ZoneOffset.UTC)
-                                                    println("Saved datetime: $itemDateTime, timestamp: $itemTime")
-                                                    showTimePicker = false
+                                                    val now = LocalDateTime.now()
+
+                                                    if (selectedDate!!.isEqual(LocalDate.now()) &&
+                                                        newDateTime.isBefore(now)
+                                                    ) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            context.getString(R.string.time_error_message),
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    } else {
+                                                        itemDateTime = newDateTime
+                                                        itemTime =
+                                                            newDateTime.toEpochSecond(ZoneOffset.UTC)
+                                                        println("Saved datetime: $itemDateTime, timestamp: $itemTime")
+                                                        showTimePicker = false
+                                                    }
                                                 }
                                             ) {
                                                 Text(stringResource(R.string.confirm_button))
@@ -230,7 +272,13 @@ fun RepositoryScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            viewModel.addItem(repoId, itemTitle, itemDescribe, itemTime, itemDateTime)
+                            viewModel.addItem(
+                                repoId,
+                                itemTitle,
+                                itemDescribe,
+                                itemTime,
+                                itemDateTime
+                            )
                             itemTitle = ""
                             itemDescribe = ""
                             itemTime = 0L
@@ -257,7 +305,10 @@ fun RepositoryScreen(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.add_item_fab_desc))
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(R.string.add_item_fab_desc)
+            )
         }
 
         if (showDeleteDialog) {

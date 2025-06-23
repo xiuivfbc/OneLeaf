@@ -28,4 +28,6 @@
     <string name="delete_repository_title">删除Repository</string>
     <string name="delete_repository_message">确定要删除Repository: %s吗？</string>
     <string name="delete_repository_desc">删除Repository</string>
+    <string name="date_error_message">日期不能早于今天</string>
+    <string name="time_error_message">时间不能早于当前时间</string>
 </resources>

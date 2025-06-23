@@ -1,6 +1,7 @@
 package com.example.todolists.ui.item
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -214,11 +215,22 @@ fun ItemEditScreen(
                 TextButton(
                     onClick = {
                         dateState.selectedDateMillis?.let { millis ->
-                            selectedDate = Instant.ofEpochMilli(millis)
+                            val selectedDate_ = Instant.ofEpochMilli(millis)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
-                            showDatePicker = false
-                            showTimePicker = true
+                            val today = LocalDate.now()
+
+                            if (selectedDate_!!.isBefore(today)) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.date_error_message),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                selectedDate = selectedDate_
+                                showDatePicker = false
+                                showTimePicker = true
+                            }
                         }
                     },
                     enabled = dateState.selectedDateMillis != null
@@ -236,54 +248,65 @@ fun ItemEditScreen(
         }
     }
 
-    if (showTimePicker && selectedDate != null) {
-    Dialog(
-        onDismissRequest = { showTimePicker = false },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Card(
-            modifier = Modifier
-                .width(IntrinsicSize.Min)
-                .padding(16.dp)
+    if (showTimePicker) {
+        Dialog(
+            onDismissRequest = { showTimePicker = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Card(
+                modifier = Modifier
+                    .width(IntrinsicSize.Min)
+                    .padding(16.dp)
             ) {
-                TimePicker(
-                    state = timeState,
-                    modifier = Modifier.padding(8.dp)
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.End
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    TextButton(onClick = { showTimePicker = false }) {
-                        Text(stringResource(R.string.cancel_button))
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    TextButton(
-                        onClick = {
-                            val newDateTime = LocalDateTime.of(
-                                selectedDate!!.year,
-                                selectedDate!!.month,
-                                selectedDate!!.dayOfMonth,
-                                timeState.hour,
-                                timeState.minute
-                            )
-                            setCurrentItem(currentItem.copy(dateTime = newDateTime))
-                            viewModel.setSelectedDateTime(newDateTime)
-                            showTimePicker = false
-                        }
+                    TimePicker(
+                        state = timeState,
+                        modifier = Modifier.padding(8.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text(stringResource(R.string.confirm_button))
+                        TextButton(onClick = { showTimePicker = false }) {
+                            Text(stringResource(R.string.cancel_button))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        TextButton(
+                            onClick = {
+                                val newDateTime = LocalDateTime.of(
+                                    selectedDate!!.year,
+                                    selectedDate!!.month,
+                                    selectedDate!!.dayOfMonth,
+                                    timeState.hour,
+                                    timeState.minute
+                                )
+                                val now = LocalDateTime.now()
+                                
+                                if (selectedDate!!.isEqual(LocalDate.now()) && 
+                                    newDateTime.isBefore(now)) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.time_error_message),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    setCurrentItem(currentItem.copy(dateTime = newDateTime))
+                                    viewModel.setSelectedDateTime(newDateTime)
+                                    showTimePicker = false
+                                }
+                            }
+                        ) {
+                            Text(stringResource(R.string.confirm_button))
+                        }
                     }
                 }
             }
         }
     }
-}
 }
