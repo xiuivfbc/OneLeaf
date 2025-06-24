@@ -28,7 +28,6 @@ class ItemEditViewModel(
                 _uiState.value = ItemEditState(
                     repoId = repoId,
                     item = item,
-                    isNew = item.id == 0L,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -68,7 +67,6 @@ class ItemEditViewModel(
 data class ItemEditState(
     val repoId: String = "",
     val item: ToDoItem = ToDoItem(title = "", describe = ""),
-    val isNew: Boolean = true,
     val isLoading: Boolean = false,
     val showDatePicker: Boolean = false,
     val selectedDateTime: LocalDateTime? = null

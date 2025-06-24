@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -98,14 +99,14 @@ fun ItemEditScreen(
         initialMinute = currentItem.dateTime?.minute ?: 0
     )
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var isSelectingAlarmTime by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        if (uiState.isNew) stringResource(R.string.new_todo_title)
-                        else stringResource(R.string.edit_todo_title)
+                        stringResource(R.string.edit_todo_title)
                     )
                 },
                 navigationIcon = {
@@ -117,6 +118,44 @@ fun ItemEditScreen(
                     }
                 }
             )
+        },
+        bottomBar = {
+            Column(modifier = Modifier.padding(16.dp)) {
+                // 保存按钮
+                Button(
+                    onClick = {
+                        val updatedItem = currentItem.copy(
+                            time = currentItem.dateTime?.toEpochSecond(ZoneOffset.UTC) ?: 0L,
+                            enableAlarm = currentItem.enableAlarm,
+                            alarmTime = if (currentItem.enableAlarm) currentItem.alarmTime else null
+                        )
+                        viewModel.saveItem(updatedItem)
+                        onBack()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(stringResource(R.string.save_button))
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 删除按钮
+                Button(
+                    onClick = {
+                        viewModel.deleteItem()
+                        onBack()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF6F61)
+                    )
+                ) {
+                    Text(stringResource(R.string.delete_button))
+                }
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -125,6 +164,7 @@ fun ItemEditScreen(
                 .fillMaxSize()
         ) {
             item {
+                // ui
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -158,7 +198,10 @@ fun ItemEditScreen(
 
                     // 日期时间选择按钮
                     Button(
-                        onClick = { showDatePicker = true },
+                        onClick = {
+                            isSelectingAlarmTime = false
+                            showDatePicker = true
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
@@ -169,140 +212,144 @@ fun ItemEditScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 保存按钮
-                    Button(
-                        onClick = {
-                            val updatedItem = currentItem.copy(
-                                time = currentItem.dateTime?.toEpochSecond(ZoneOffset.UTC) ?: 0L
-                            )
-                            viewModel.saveItem(updatedItem)
-                            onBack()
-                        },
+                    // 启用闹钟开关
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Text(stringResource(R.string.save_button))
+                        Text(text = stringResource(R.string.enable_alarm_label))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Switch(
+                            checked = currentItem.enableAlarm,
+                            onCheckedChange = { setCurrentItem(currentItem.copy(enableAlarm = it)) }
+                        )
                     }
 
-                    // 删除按钮（仅编辑模式显示）
-                    if (!uiState.isNew) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    // 闹钟时间选择按钮
+                    if (currentItem.enableAlarm) {
+                        if (currentItem.alarmTime?.toString() == null) {
+                            currentItem.alarmTime = currentItem.dateTime
+                        }
                         Button(
                             onClick = {
-                                viewModel.deleteItem()
-                                onBack()
+                                isSelectingAlarmTime = true
+                                showDatePicker = true
                             },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFF6F61)
-                            )
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(stringResource(R.string.delete_button))
+                            Text(
+                                currentItem.alarmTime?.toString()
+                                    ?: stringResource(R.string.select_alarm_time_button)
+                            )
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
-            }
-        }
-    }
 
-    // 日期选择对话框
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        dateState.selectedDateMillis?.let { millis ->
-                            val selectedDate_ = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                            val today = LocalDate.now()
+                // 日期时间选择对话框
+                if (showDatePicker) {
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    dateState.selectedDateMillis?.let { millis ->
+                                        val selectedDate_ = Instant.ofEpochMilli(millis)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDate()
+                                        val today = LocalDate.now()
 
-                            if (selectedDate_!!.isBefore(today)) {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.date_error_message),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } else {
-                                selectedDate = selectedDate_
-                                showDatePicker = false
-                                showTimePicker = true
+                                        if (selectedDate_!!.isBefore(today)) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.date_error_message),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        } else {
+                                            selectedDate = selectedDate_
+                                            showDatePicker = false
+                                            showTimePicker = true
+                                        }
+                                    }
+                                },
+                                enabled = dateState.selectedDateMillis != null
+                            ) {
+                                Text(stringResource(R.string.next_button))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) {
+                                Text(stringResource(R.string.cancel_button))
                             }
                         }
-                    },
-                    enabled = dateState.selectedDateMillis != null
-                ) {
-                    Text(stringResource(R.string.next_button))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.cancel_button))
-                }
-            }
-        ) {
-            DatePicker(state = dateState)
-        }
-    }
-
-    if (showTimePicker) {
-        Dialog(
-            onDismissRequest = { showTimePicker = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
-        ) {
-            Card(
-                modifier = Modifier
-                    .width(IntrinsicSize.Min)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    TimePicker(
-                        state = timeState,
-                        modifier = Modifier.padding(8.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.End
                     ) {
-                        TextButton(onClick = { showTimePicker = false }) {
-                            Text(stringResource(R.string.cancel_button))
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        TextButton(
-                            onClick = {
-                                val newDateTime = LocalDateTime.of(
-                                    selectedDate!!.year,
-                                    selectedDate!!.month,
-                                    selectedDate!!.dayOfMonth,
-                                    timeState.hour,
-                                    timeState.minute
+                        DatePicker(state = dateState)
+                    }
+                }
+                if (showTimePicker) {
+                    Dialog(
+                        onDismissRequest = { showTimePicker = false },
+                        properties = DialogProperties(usePlatformDefaultWidth = false)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .width(IntrinsicSize.Min)
+                                .padding(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                TimePicker(
+                                    state = timeState,
+                                    modifier = Modifier.padding(8.dp)
                                 )
-                                val now = LocalDateTime.now()
-                                
-                                if (selectedDate!!.isEqual(LocalDate.now()) && 
-                                    newDateTime.isBefore(now)) {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.time_error_message),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    setCurrentItem(currentItem.copy(dateTime = newDateTime))
-                                    viewModel.setSelectedDateTime(newDateTime)
-                                    showTimePicker = false
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 16.dp),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(onClick = { showTimePicker = false }) {
+                                        Text(stringResource(R.string.cancel_button))
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    TextButton(
+                                        onClick = {
+                                            val newDateTime = LocalDateTime.of(
+                                                selectedDate!!.year,
+                                                selectedDate!!.month,
+                                                selectedDate!!.dayOfMonth,
+                                                timeState.hour,
+                                                timeState.minute
+                                            )
+                                            val now = LocalDateTime.now()
+
+                                            if (selectedDate!!.isEqual(LocalDate.now()) &&
+                                                newDateTime.isBefore(now)
+                                            ) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.time_error_message),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                if (isSelectingAlarmTime) {
+                                                    setCurrentItem(currentItem.copy(alarmTime = newDateTime))
+                                                } else {
+                                                    setCurrentItem(currentItem.copy(dateTime = newDateTime))
+                                                    viewModel.setSelectedDateTime(newDateTime)
+                                                }
+                                                showTimePicker = false
+                                            }
+                                        }
+                                    ) {
+                                        Text(stringResource(R.string.confirm_button))
+                                    }
                                 }
                             }
-                        ) {
-                            Text(stringResource(R.string.confirm_button))
                         }
                     }
                 }
@@ -310,3 +357,4 @@ fun ItemEditScreen(
         }
     }
 }
+
