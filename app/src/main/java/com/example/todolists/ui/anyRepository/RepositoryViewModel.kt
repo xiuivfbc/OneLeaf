@@ -1,13 +1,11 @@
 package com.example.todolists.ui.anyRepository
 
-import android.view.View
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolists.data.ToDoItem
 import com.example.todolists.data.ToDoListRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -25,11 +23,17 @@ class RepositoryViewModel(
         }
     }
 
-    fun addItem(dbName: String, title: String, describe: String = "", time: Long = 0, dateTime: LocalDateTime? = null) {
+    fun addItem(
+        dbName: String,
+        title: String,
+        describe: String = "",
+        time: Long = 0,
+        dateTime: LocalDateTime? = null
+    ) {
         viewModelScope.launch {
             val newItem = ToDoItem(
-                title = title, 
-                describe = describe, 
+                title = title,
+                describe = describe,
                 time = time,
                 dateTime = dateTime
             )

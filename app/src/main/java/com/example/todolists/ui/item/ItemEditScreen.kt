@@ -1,7 +1,11 @@
 package com.example.todolists.ui.item
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todolists.R
 import com.example.todolists.ui.AppViewModelProvider
@@ -70,7 +75,30 @@ fun ItemEditScreen(
 ) {
     val viewModel: ItemEditViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val uiState = viewModel.uiState.collectAsState().value
+
+    // 权限检查
     val context = LocalContext.current
+    val notificationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(
+                context,
+                "通知权限被拒绝，闹钟将无声音",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = Manifest.permission.POST_NOTIFICATIONS
+            if (ContextCompat.checkSelfPermission(context, permission)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationLauncher.launch(permission)
+            }
+        }
+    }
 
     LaunchedEffect(repoId, itemId) {
         viewModel.init(repoId, itemId)
@@ -129,7 +157,7 @@ fun ItemEditScreen(
                             enableAlarm = currentItem.enableAlarm,
                             alarmTime = if (currentItem.enableAlarm) currentItem.alarmTime else null
                         )
-                        viewModel.saveItem(updatedItem)
+                        viewModel.saveItem(updatedItem, context)
                         onBack()
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -357,4 +385,3 @@ fun ItemEditScreen(
         }
     }
 }
-

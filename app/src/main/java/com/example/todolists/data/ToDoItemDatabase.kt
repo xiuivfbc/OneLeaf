@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(entities = [ToDoItem::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
-abstract class ToDoItemDatabase: RoomDatabase() {
+abstract class ToDoItemDatabase : RoomDatabase() {
     abstract fun todoItemDao(): ToDoItemDao
 
     companion object {
@@ -18,8 +18,8 @@ abstract class ToDoItemDatabase: RoomDatabase() {
                 ToDoItemDatabase::class.java,
                 "todo_item_database"
             )
-            .fallbackToDestructiveMigration()
-            .build()
+                .fallbackToDestructiveMigration()
+                .build()
         }
     }
 }

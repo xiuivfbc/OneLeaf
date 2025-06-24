@@ -1,11 +1,19 @@
 package com.example.todolists.ui.item
 
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolists.data.ToDoItem
 import com.example.todolists.data.ToDoListRepository
+import com.example.todolists.receiver.AlarmReceiver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,9 +44,52 @@ class ItemEditViewModel(
         }
     }
 
-    fun saveItem(item: ToDoItem) {
+    @SuppressLint("ScheduleExactAlarm")
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun saveItem(item: ToDoItem, context: Context) {
         viewModelScope.launch {
             repository.updateItem(item, _uiState.value.repoId)
+
+            if (item.enableAlarm && item.alarmTime != null) {
+                // 检查精确闹钟权限
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    !alarmManager.canScheduleExactAlarms()
+                ) {
+                    Log.e("ItemEditViewModel", "缺少精确闹钟权限")
+                    Toast.makeText(
+                        context,
+                        "请授予精确闹钟权限",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@launch
+                }
+                val intent = Intent(context, AlarmReceiver::class.java).apply {
+                    putExtra("title", item.title)
+                    putExtra("description", item.describe)
+                }
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    item.id.toInt(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+
+                val alarmTime =
+                    item.alarmTime!!.atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli()
+                Log.d("ItemEditViewModel", "Setting alarm for item ${item.id} at ${item.alarmTime}")
+
+                try {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        alarmTime,
+                        pendingIntent
+                    )
+                    Log.d("ItemEditViewModel", "Alarm set successfully")
+                } catch (e: SecurityException) {
+                    Log.e("ItemEditViewModel", "Failed to set alarm: ${e.message}")
+                }
+            }
         }
     }
 

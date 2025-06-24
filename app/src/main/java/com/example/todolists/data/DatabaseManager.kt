@@ -1,10 +1,9 @@
 package com.example.todolists.data
 
-import androidx.room.Room
 import android.content.Context
+import androidx.room.Room
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 
 class DatabaseManager(private val context: Context) {
     private val preferencesDataStore = PreferencesDataStore(context)
@@ -29,8 +28,8 @@ class DatabaseManager(private val context: Context) {
             ToDoItemDatabase::class.java,
             "$name.db"
         )
-        .fallbackToDestructiveMigration()
-        .build()
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     fun closeAll() {
