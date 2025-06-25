@@ -63,7 +63,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // DataStore
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.androidx.datastore.preferences)
 
     // Room
     implementation(libs.androidx.room.runtime)
@@ -79,5 +79,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // GoogleFonts
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.8.1")
+    implementation(libs.androidx.ui.text.google.fonts)
+    
+    // WorkManager
+    implementation(libs.androidx.work.runtime)
 }

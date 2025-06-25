@@ -15,11 +15,15 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.todolists.R
+import com.example.todolists.utils.IconManager
 
 class AlarmReceiver : BroadcastReceiver() {
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("AlarmReceiver", "Alarm triggered")
+        
+        // 更新应用图标
+        IconManager(context).updateAppIcon()
 
         // 检查设备通知设置是否被禁用
         val notificationManager = context.getSystemService(NotificationManager::class.java)
