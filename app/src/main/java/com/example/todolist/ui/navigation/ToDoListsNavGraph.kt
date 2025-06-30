@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -24,7 +23,7 @@ fun ToDoListsNavGraph(
     navController: NavHostController,
     modifier: Modifier
 ) {
-    Box(modifier= Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route
@@ -75,11 +74,6 @@ fun ToDoListsNavGraph(
 
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) {
-        popUpTo(
-            this@navigateSingleTopTo.graph.findStartDestination().id
-        ) {
-            saveState = true
-        }
         launchSingleTop = true
         restoreState = true
     }

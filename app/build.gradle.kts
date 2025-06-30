@@ -70,17 +70,13 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
 
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.converter.gson)
-
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // GoogleFonts
     implementation(libs.androidx.ui.text.google.fonts)
-    
+
     // WorkManager
     implementation(libs.androidx.work.runtime)
 }

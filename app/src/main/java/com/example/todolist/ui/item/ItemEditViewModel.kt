@@ -7,13 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todolist.data.ToDoItem
 import com.example.todolist.data.ToDoListRepository
-import com.example.todolist.receiver.AlarmReceiver
+import com.example.todolist.alarm.AlarmReceiver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,20 +49,23 @@ class ItemEditViewModel(
         viewModelScope.launch {
             repository.updateItem(item, _uiState.value.repoId)
 
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val oldPendingIntent = PendingIntent.getBroadcast(
+                context,
+                item.id.toInt(),
+                Intent(context, AlarmReceiver::class.java),
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE // 检查是否存在旧闹钟
+            )
+
+            // 取消旧闹钟（如果存在）
+            if (oldPendingIntent != null) {
+                alarmManager.cancel(oldPendingIntent)
+                oldPendingIntent.cancel()
+                Log.d("ItemEditViewModel", "Old alarm canceled")
+            }
+
+            // 设置新闹钟（如果启用）
             if (item.enableAlarm && item.alarmTime != null) {
-                // 检查精确闹钟权限
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                    !alarmManager.canScheduleExactAlarms()
-                ) {
-                    Log.e("ItemEditViewModel", "缺少精确闹钟权限")
-                    Toast.makeText(
-                        context,
-                        "请授予精确闹钟权限",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    return@launch
-                }
                 val intent = Intent(context, AlarmReceiver::class.java).apply {
                     putExtra("title", item.title)
                     putExtra("description", item.describe)
@@ -75,27 +77,34 @@ class ItemEditViewModel(
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
 
-                val alarmTime =
-                    item.alarmTime!!.atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli()
-                Log.d("ItemEditViewModel", "Setting alarm for item ${item.id} at ${item.alarmTime}")
-
-                try {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        alarmTime,
-                        pendingIntent
-                    )
-                    Log.d("ItemEditViewModel", "Alarm set successfully")
-                } catch (e: SecurityException) {
-                    Log.e("ItemEditViewModel", "Failed to set alarm: ${e.message}")
-                }
+                val alarmTime = item.alarmTime!!.toInstant(ZoneOffset.UTC).toEpochMilli()
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    alarmTime,
+                    pendingIntent
+                )
             }
         }
     }
 
-    fun deleteItem() {
+    fun deleteItem(context: Context) {
         viewModelScope.launch {
-            repository.deleteItem(_uiState.value.item, _uiState.value.repoId)
+            val item = _uiState.value.item
+            repository.deleteItem(item, _uiState.value.repoId)
+
+            // 取消关联的闹钟
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                item.id.toInt(),
+                Intent(context, AlarmReceiver::class.java),
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+            )
+            pendingIntent?.let {
+                alarmManager.cancel(it)
+                it.cancel()
+                Log.d("ItemEditViewModel", "Alarm canceled for deleted item")
+            }
         }
     }
 

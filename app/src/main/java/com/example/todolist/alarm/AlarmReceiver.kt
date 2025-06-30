@@ -1,6 +1,7 @@
-package com.example.todolist.receiver
+package com.example.todolist.alarm
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -9,7 +10,6 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
@@ -17,29 +17,10 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.todolist.R
 
 class AlarmReceiver : BroadcastReceiver() {
+    @SuppressLint("UnsafeProtectedBroadcastReceiver")
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("AlarmReceiver", "Alarm triggered")
-
-        // 检查设备通知设置是否被禁用
-        val notificationManager = context.getSystemService(NotificationManager::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = notificationManager.getNotificationChannel("alarm_channel")
-            if (channel?.importance == NotificationManager.IMPORTANCE_NONE) {
-                Log.e("AlarmReceiver", "用户手动关闭了此渠道的通知")
-                // 可以在这里跳转到应用通知设置页
-                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                }
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-                return // 直接返回，不发送通知
-            }
-        }
-        if (!notificationManager.areNotificationsEnabled()) {
-            Log.e("AlarmReceiver", "全局通知被关闭")
-            return
-        }
 
         val title = intent.getStringExtra("title") ?: ""
         var description = intent.getStringExtra("description") ?: ""
