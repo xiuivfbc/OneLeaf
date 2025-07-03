@@ -19,7 +19,8 @@ object AppViewModelProvider {
 
         initializer {
             ItemEditViewModel(
-                todolistApplication().container.toDoListRepository
+                todolistApplication().container.toDoListRepository,
+                todolistApplication().container.workManager
             )
         }
 

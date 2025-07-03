@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 @Dao
 interface ToDoItemDao {
@@ -23,4 +24,7 @@ interface ToDoItemDao {
 
     @Query("SELECT * FROM todo_items ORDER BY time DESC")
     fun getAllItems(): Flow<List<ToDoItem>>
+
+    @Query("SELECT * FROM todo_items WHERE enableAlarm = 1 AND alarmTime <= :endTime ORDER BY alarmTime ASC")
+    fun getUpcomingAlarms(endTime: Long?): Flow<List<ToDoItem>>
 }

@@ -126,8 +126,8 @@ fun ItemEditScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     val dateState = rememberDatePickerState()
     val timeState = rememberTimePickerState(
-        initialHour = currentItem.dateTime?.hour ?: 0,
-        initialMinute = currentItem.dateTime?.minute ?: 0
+        initialHour = currentItem.alarmTime?.hour ?: currentItem.dateTime?.hour ?: 0,
+        initialMinute = currentItem.alarmTime?.minute ?: currentItem.dateTime?.minute ?: 0
     )
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var isSelectingAlarmTime by remember { mutableStateOf(false) }
@@ -155,6 +155,39 @@ fun ItemEditScreen(
                 // 保存按钮
                 Button(
                     onClick = {
+                        val now = LocalDateTime.now()
+                        
+                        // 检查闹钟时间是否合理
+                        if (currentItem.enableAlarm) {
+                            if (currentItem.alarmTime == null) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.alarm_time_required),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            
+                            if (currentItem.alarmTime!!.isBefore(now)) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.alarm_time_past_error),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                            
+                            if (currentItem.dateTime != null && 
+                                currentItem.alarmTime!!.isBefore(currentItem.dateTime)) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.alarm_time_before_task_error),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@Button
+                            }
+                        }
+
                         val updatedItem = currentItem.copy(
                             time = currentItem.dateTime?.toEpochSecond(ZoneOffset.UTC) ?: 0L,
                             enableAlarm = currentItem.enableAlarm,
@@ -176,7 +209,7 @@ fun ItemEditScreen(
                 // 删除按钮
                 Button(
                     onClick = {
-                        viewModel.deleteItem()
+                        viewModel.deleteItem(context)
                         onBack()
                     },
                     modifier = Modifier.fillMaxWidth(),

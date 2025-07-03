@@ -30,6 +30,9 @@
     <string name="delete_repository_desc">删除Repository</string>
     <string name="date_error_message">日期不能早于今天</string>
     <string name="time_error_message">时间不能早于当前时间</string>
+    <string name="alarm_time_required">请设置闹钟时间</string>
+    <string name="alarm_time_past_error">闹钟时间不能早于当前时间</string>
+    <string name="alarm_time_before_task_error">闹钟时间不能早于任务时间</string>
     <string name="enable_alarm_label">启用闹钟提醒</string>
     <string name="use_custom_alarm_time_label">使用自定义闹钟时间</string>
     <string name="select_alarm_time_button">选择闹钟时间</string>

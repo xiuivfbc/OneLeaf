@@ -1,8 +1,14 @@
 package com.example.todolist.data
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.time.Instant
 
 class ToDoListRepository(private val databaseManager: DatabaseManager) {
     suspend fun insertItem(item: ToDoItem, name: String) {
@@ -44,5 +50,19 @@ class ToDoListRepository(private val databaseManager: DatabaseManager) {
 
     suspend fun deleteRepository(name: String) {
         databaseManager.deleteDatabase(name)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getUpcomingAlarms(endTime: Instant?): Flow<List<ToDoItem>> {
+        return flow {
+            val allAlarms = mutableListOf<ToDoItem>()
+            databaseManager.getAllDatabases().first().forEach { dbName ->
+                val db = databaseManager.getDatabase(dbName)
+                db.todoItemDao().getUpcomingAlarms(endTime?.toEpochMilli()).first().let { alarms ->
+                    allAlarms.addAll(alarms)
+                }
+            }
+            emit(allAlarms)
+        }.flowOn(Dispatchers.IO)
     }
 }
